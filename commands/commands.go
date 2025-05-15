@@ -23,11 +23,7 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(strings.TrimPrefix(content, prefix), " ")
 	cmd := args[0]
 
-	if handler, ok := router.PublicCommands[cmd]; ok {
-		handler(s, m)
-		return
-	}
-
+	// Primeiro checa se é comando de admin
 	if handler, ok := router.AdminCommands[cmd]; ok {
 		if utils.IsAdmin(s, m.GuildID, m.Author.ID) {
 			handler(s, m)
@@ -37,6 +33,12 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 				ChannelID: m.ChannelID,
 			})
 		}
+		return // para aqui se for admin
+	}
+
+	// Depois checa se é comando público
+	if handler, ok := router.PublicCommands[cmd]; ok {
+		handler(s, m)
 		return
 	}
 }
