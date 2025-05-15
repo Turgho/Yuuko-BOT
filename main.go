@@ -2,6 +2,8 @@ package main
 
 import (
 	"Turgho/Yuuko-BOT/commands"
+	"Turgho/Yuuko-BOT/events"
+	"Turgho/Yuuko-BOT/register"
 	"log"
 	"os"
 	"os/signal"
@@ -46,17 +48,27 @@ func main() {
 		log.Fatal("DISCORD_TOKEN não encontrado no .env")
 	}
 
+	guildID := os.Getenv("GUILD_ID")
+	if guildID == "" {
+		log.Fatal("GUILD_ID não encontrado no .env")
+	}
+
 	// Inicia uma nova sessão
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Fatal("Erro ao criar sessão:", err)
 	}
 
+	dg.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentGuildMessageReactions
+
 	// Adiciona handler de mensagens
-	dg.AddHandler(commands.HandleCommand)
+	dg.AddHandler(commands.HandleSlashCommand)
 
 	// Adiciona handler de reações
 	dg.AddHandler(commands.HandleReactionAdd)
+
+	// Registra os eventos
+	events.RegisterEventsHandler(dg)
 
 	// Inicia a conexão com api do discord
 	err = dg.Open()
@@ -64,6 +76,10 @@ func main() {
 		log.Fatal("Erro ao conectar-se ao Discord:", err)
 	}
 	defer dg.Close()
+
+	// Registrar os comandos
+	appID := dg.State.User.ID
+	register.RegisterAllCommands(dg, appID, guildID)
 
 	log.Printf("Logado como: %s#%s!\n", dg.State.User.Username, dg.State.User.Discriminator)
 
