@@ -21,6 +21,7 @@ logs
 mono_crash.*
 
 # Build results
+yuuko-bot
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
