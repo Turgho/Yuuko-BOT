@@ -7,15 +7,16 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var PublicCommands = map[string]func(s *discordgo.Session, m *discordgo.MessageCreate){
+var PublicCommands = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+	// comandos public slash
 	"ping":  public.PingCommand,
-	"hello": public.HelloCommand,
-	// outros comandos públicos
+	"hello": public.HelloSlashCommand,
 }
 
-var AdminCommands = map[string]func(s *discordgo.Session, m *discordgo.MessageCreate){
-	"purge":   admin.PurgeAllCommand,
-	"rules":   admin.RulesCommand,
-	"restart": admin.RestartCommand,
-	// outros comandos restritos
+var AdminCommands = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+	// comandos admin slash
+	"rules":    admin.RulesSlashCommand,
+	"purge":    admin.PurgeSlashCommand,
+	"restart":  admin.RestartSlashCommand,
+	"shutdown": admin.ShutdownSlashCommand,
 }
