@@ -3,42 +3,48 @@ package commands
 import (
 	"Turgho/Yuuko-BOT/commands/router"
 	"Turgho/Yuuko-BOT/utils"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-const prefix = "!"
+// HandleSlashCommand processa interações do tipo slash command recebidas pelo bot.
+// Ele identifica o comando invocado, verifica permissões e executa o handler apropriado.
+func HandleSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	// Obtém o nome do comando invocado pelo usuário
+	cmd := i.ApplicationCommandData().Name
 
-func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.Bot {
-		return
-	}
-
-	content := m.Content
-	if !strings.HasPrefix(content, prefix) {
-		return
-	}
-
-	args := strings.Split(strings.TrimPrefix(content, prefix), " ")
-	cmd := args[0]
-
-	// Primeiro checa se é comando de admin
+	// Primeiro, verifica se o comando está na lista de comandos de administrador
 	if handler, ok := router.AdminCommands[cmd]; ok {
-		if utils.IsAdmin(s, m.GuildID, m.Author.ID) {
-			handler(s, m)
+		// Verifica se o usuário que chamou o comando tem permissão de admin
+		if utils.IsAdmin(s, i.GuildID, i.Member.User.ID) {
+			// Executa o handler do comando para administradores
+			handler(s, i)
 		} else {
-			s.ChannelMessageSendReply(m.ChannelID, "❌ Você não tem permissão para esse comando.", &discordgo.MessageReference{
-				MessageID: m.ID,
-				ChannelID: m.ChannelID,
+			// Caso o usuário não tenha permissão, envia uma mensagem efêmera informando
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "❌ Você não tem permissão para esse comando.",
+					Flags:   discordgo.MessageFlagsEphemeral, // só o usuário vê a mensagem
+				},
 			})
 		}
-		return // para aqui se for admin
+		return // Finaliza o fluxo, pois já encontrou o comando
 	}
 
-	// Depois checa se é comando público
+	// Se não for comando admin, verifica se é um comando público
 	if handler, ok := router.PublicCommands[cmd]; ok {
-		handler(s, m)
+		// Executa o handler do comando público
+		handler(s, i)
 		return
 	}
+
+	// Comando não reconhecido — responde informando
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "❌ Comando não conhecido.",
+			Flags:   discordgo.MessageFlagsEphemeral,
+		},
+	})
 }
