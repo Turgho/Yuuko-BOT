@@ -2,11 +2,9 @@ package main
 
 import (
 	"Turgho/Yuuko-BOT/commands"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
@@ -42,66 +40,25 @@ func main() {
 		log.Fatal("Erro ao carregar .env")
 	}
 
+	// Pega token do discord
 	token := os.Getenv("DISCORD_TOKEN")
 	if token == "" {
 		log.Fatal("DISCORD_TOKEN não encontrado no .env")
 	}
 
+	// Inicia uma nova sessão
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Fatal("Erro ao criar sessão:", err)
 	}
 
-	const prefix = "!"
-
 	// Adiciona handler de mensagens
-	dg.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		if m.Author.Bot {
-			return
-		}
-
-		content := strings.TrimSpace(m.Content)
-
-		// Verifica se começa com o prefixo
-		if !strings.HasPrefix(content, prefix) {
-			return
-		}
-
-		// Remove o prefixo
-		command := strings.TrimPrefix(content, prefix)
-
-		// Pega só a primeira palavra (caso venha com argumentos depois)
-		fields := strings.Fields(command)
-		if len(fields) == 0 {
-			return
-		}
-		cmdName := fields[0]
-
-		// Busca e executa o comando
-		if handler, ok := commands.CommandMap[cmdName]; ok {
-			handler(s, m)
-		}
-	})
+	dg.AddHandler(commands.HandleCommand)
 
 	// Adiciona handler de reações
-	dg.AddHandler(func(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
-		if r.UserID == s.State.User.ID {
-			return // Ignora reações do próprio bot
-		}
+	dg.AddHandler(commands.HandleReactionAdd)
 
-		// Verifica se é o emoji de check
-		if r.MessageID == commands.RulesMessageID && r.Emoji.Name == "✅" {
-			roleID := "1256066701548720209"
-
-			// Reação canal de regras
-			s.ChannelMessageSend(r.ChannelID, fmt.Sprintf("<@%s> aceitou as regras!", r.UserID))
-			err := s.GuildMemberRoleAdd(r.GuildID, r.UserID, roleID)
-			if err != nil {
-				log.Printf("Erro ao adicionar cargo ao usuário: %s\n", r.Emoji.User.Username)
-			}
-		}
-	})
-
+	// Inicia a conexão com api do discord
 	err = dg.Open()
 	if err != nil {
 		log.Fatal("Erro ao conectar-se ao Discord:", err)
