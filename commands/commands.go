@@ -1,12 +1,14 @@
 package commands
 
 import (
+	"Turgho/Yuuko-BOT/commands/router"
+	"Turgho/Yuuko-BOT/utils"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-var prefix = "!"
+const prefix = "!"
 
 func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.Bot {
@@ -21,7 +23,20 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(strings.TrimPrefix(content, prefix), " ")
 	cmd := args[0]
 
-	if handler, ok := CommandMap[cmd]; ok {
+	if handler, ok := router.PublicCommands[cmd]; ok {
 		handler(s, m)
+		return
+	}
+
+	if handler, ok := router.AdminCommands[cmd]; ok {
+		if utils.IsAdmin(s, m.GuildID, m.Author.ID) {
+			handler(s, m)
+		} else {
+			s.ChannelMessageSendReply(m.ChannelID, "❌ Você não tem permissão para esse comando.", &discordgo.MessageReference{
+				MessageID: m.ID,
+				ChannelID: m.ChannelID,
+			})
+		}
+		return
 	}
 }
