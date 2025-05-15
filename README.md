@@ -1,1 +1,0 @@
-# Yuuko-BOT
