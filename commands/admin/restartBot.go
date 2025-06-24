@@ -38,8 +38,6 @@ func RestartSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// Fecha a sessão para desconectar do gateway
 	s.Close()
 
-	time.Sleep(3 * time.Second)
-
 	// Encerra o processo atual após iniciar o novo
 	os.Exit(0)
 }

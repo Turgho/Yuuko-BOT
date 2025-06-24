@@ -27,8 +27,6 @@ func ShutdownSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	// Fecha a sessão para desconectar do gateway
 	s.Close()
 
-	time.Sleep(3 * time.Second)
-
 	// Finaliza o processo
 	os.Exit(0)
 }

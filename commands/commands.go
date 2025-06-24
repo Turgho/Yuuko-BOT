@@ -7,44 +7,111 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// HandleSlashCommand processa interações do tipo slash command recebidas pelo bot.
-// Ele identifica o comando invocado, verifica permissões e executa o handler apropriado.
-func HandleSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	// Obtém o nome do comando invocado pelo usuário
-	cmd := i.ApplicationCommandData().Name
+// HandleInteraction é o handler geral para interações (slash commands, botões, etc).
+func HandleInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	switch i.Type {
+	case discordgo.InteractionApplicationCommand:
+		HandleSlashCommand(s, i)
 
-	// Primeiro, verifica se o comando está na lista de comandos de administrador
-	if handler, ok := router.AdminCommands[cmd]; ok {
-		// Verifica se o usuário que chamou o comando tem permissão de admin
-		if utils.IsAdmin(s, i.GuildID, i.Member.User.ID) {
-			// Executa o handler do comando para administradores
-			handler(s, i)
-		} else {
-			// Caso o usuário não tenha permissão, envia uma mensagem efêmera informando
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: "❌ Você não tem permissão para esse comando.",
-					Flags:   discordgo.MessageFlagsEphemeral, // só o usuário vê a mensagem
-				},
-			})
-		}
-		return // Finaliza o fluxo, pois já encontrou o comando
+	case discordgo.InteractionMessageComponent:
+		HandleButtonInteraction(s, i)
+
+	// Outros tipos podem ser tratados aqui se quiser
+	default:
+		// Ignora outros tipos
 	}
+}
 
-	// Se não for comando admin, verifica se é um comando público
-	if handler, ok := router.PublicCommands[cmd]; ok {
-		// Executa o handler do comando público
-		handler(s, i)
+// HandleSlashCommand processa comandos do tipo slash command.
+func HandleSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	// Só trata comandos do tipo ApplicationCommand
+	if i.Type != discordgo.InteractionApplicationCommand {
 		return
 	}
 
-	// Comando não reconhecido — responde informando
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "❌ Comando não conhecido.",
-			Flags:   discordgo.MessageFlagsEphemeral,
-		},
-	})
+	cmd := i.ApplicationCommandData().Name
+
+	respondEphemeral := func(content string) {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: content,
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+	}
+
+	if handler, ok := router.AdminCommands[cmd]; ok {
+		if utils.IsAdmin(s, i.GuildID, i.Member.User.ID) {
+			handler(s, i)
+		} else {
+			respondEphemeral("❌ Você não tem permissão para esse comando.")
+		}
+		return
+	}
+
+	commandCategories := []map[string]func(*discordgo.Session, *discordgo.InteractionCreate){
+		router.PublicCommands,
+		router.MonsterHunterCommands,
+		router.GamesCommands,
+	}
+
+	for _, category := range commandCategories {
+		if handler, ok := category[cmd]; ok {
+			handler(s, i)
+			return
+		}
+	}
+
+	respondEphemeral("❌ Comando não conhecido.")
+}
+
+func HandleButtonInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if i == nil {
+		return
+	}
+
+	if i.Type != discordgo.InteractionMessageComponent {
+		// Ignora interações que não são de botão
+		return
+	}
+
+	data := i.MessageComponentData()
+	if data.CustomID == "" {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Dados inválidos no componente.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+	elements := []string{"Fire", "Water", "Thunder", "Ice", "Dragon", "Poison", "Sleep", "Paralysis", "Blast", "Stun"}
+
+	customID := data.CustomID
+
+	// Verifica se o customID é um dos elementos
+	isElement := false
+	for _, e := range elements {
+		if customID == e {
+			isElement = true
+			break
+		}
+	}
+
+	switch {
+	case customID == "attack" || customID == "run":
+		// monsterhunter.HandleMonsterHunterButtons(s, i)
+	case isElement:
+		// monsterhunter.HandleElementButton(s, i)
+	default:
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Botão desconhecido.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+	}
 }

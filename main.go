@@ -2,8 +2,13 @@ package main
 
 import (
 	"Turgho/Yuuko-BOT/commands"
+	"Turgho/Yuuko-BOT/db"
 	"Turgho/Yuuko-BOT/events"
+	"Turgho/Yuuko-BOT/models/monsterhunter/armor"
+	"Turgho/Yuuko-BOT/models/monsterhunter/weapon"
 	"Turgho/Yuuko-BOT/register"
+	"Turgho/Yuuko-BOT/server"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -33,8 +38,23 @@ func initLog() {
 }
 
 func main() {
+	server.ServeStaticIcons()
+
+	fmt.Println("Servidor de ícones rodando em http://localhost:8000/icons/")
+
 	// Inicia o arquivo de logs
 	initLog()
+
+	// Inicia a Database
+	db.InitDB()
+
+	if err := weapon.LoadWeapons(); err != nil {
+		log.Fatalf("Falha crítica ao carregar armas: %v", err)
+	}
+
+	if err := armor.LoadArmors(); err != nil {
+		log.Fatalf("Falha crítica ao carregar armaduras: %v", err)
+	}
 
 	// Carregar variáveis de ambiente
 	err := godotenv.Load()
@@ -66,6 +86,8 @@ func main() {
 
 	// Adiciona handler de reações
 	dg.AddHandler(commands.HandleReactionAdd)
+
+	dg.AddHandler(commands.HandleButtonInteraction)
 
 	// Registra os eventos
 	events.RegisterEventsHandler(dg)
