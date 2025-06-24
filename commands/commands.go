@@ -52,7 +52,6 @@ func HandleSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	commandCategories := []map[string]func(*discordgo.Session, *discordgo.InteractionCreate){
 		router.PublicCommands,
-		router.MonsterHunterCommands,
 		router.GamesCommands,
 	}
 
