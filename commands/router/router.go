@@ -2,7 +2,6 @@ package router
 
 import (
 	"Turgho/Yuuko-BOT/commands/admin"
-	"Turgho/Yuuko-BOT/commands/games/monsterhunter"
 	"Turgho/Yuuko-BOT/commands/public"
 
 	"github.com/bwmarrin/discordgo"
@@ -20,13 +19,6 @@ var AdminCommands = map[string]func(s *discordgo.Session, i *discordgo.Interacti
 	"purge":    admin.PurgeSlashCommand,
 	"restart":  admin.RestartSlashCommand,
 	"shutdown": admin.ShutdownSlashCommand,
-}
-
-var MonsterHunterCommands = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	"ranks": monsterhunter.GetAllRanksSlashCommand,
-	// "hunt":    monsterhunter.HuntSlashCommand,
-	"profile": monsterhunter.GetHunterProfileSlashCommand,
-	"start":   monsterhunter.StartNewHunterCommand,
 }
 
 var GamesCommands = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){}
