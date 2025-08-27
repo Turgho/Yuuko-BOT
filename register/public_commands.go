@@ -17,8 +17,16 @@ func RegisterPublicCommands(s *discordgo.Session, appID, guildID string) {
 			Description: "Comando para testar a latência de resposta do bot",
 		},
 		{
-			Name:        "coinflip",
-			Description: "Gira uma moeda com cara ou coroa",
+			Name:        "weather",
+			Description: "Mostra a previsão do tempo de uma cidade",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "cidade",
+					Description: "Nome da cidade",
+					Required:    true,
+				},
+			},
 		},
 	}
 
