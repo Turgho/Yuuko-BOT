@@ -16,7 +16,7 @@ func HandleInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case discordgo.InteractionMessageComponent:
 		HandleButtonInteraction(s, i)
 
-	// Outros tipos podem ser tratados aqui se quiser
+	// Outros tipos podem ser tratados
 	default:
 		// Ignora outros tipos
 	}
@@ -86,24 +86,8 @@ func HandleButtonInteraction(s *discordgo.Session, i *discordgo.InteractionCreat
 		})
 		return
 	}
-	elements := []string{"Fire", "Water", "Thunder", "Ice", "Dragon", "Poison", "Sleep", "Paralysis", "Blast", "Stun"}
-
-	customID := data.CustomID
-
-	// Verifica se o customID é um dos elementos
-	isElement := false
-	for _, e := range elements {
-		if customID == e {
-			isElement = true
-			break
-		}
-	}
 
 	switch {
-	case customID == "attack" || customID == "run":
-		// monsterhunter.HandleMonsterHunterButtons(s, i)
-	case isElement:
-		// monsterhunter.HandleElementButton(s, i)
 	default:
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,

@@ -9,8 +9,9 @@ import (
 
 var PublicCommands = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 	// comandos public slash
-	"ping":  public.PingCommand,
-	"hello": public.HelloSlashCommand,
+	"ping":     public.PingCommand,
+	"hello":    public.HelloSlashCommand,
+	"coinflip": public.CoinflipSlashCommand,
 }
 
 var AdminCommands = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -19,6 +20,7 @@ var AdminCommands = map[string]func(s *discordgo.Session, i *discordgo.Interacti
 	"purge":    admin.PurgeSlashCommand,
 	"restart":  admin.RestartSlashCommand,
 	"shutdown": admin.ShutdownSlashCommand,
+	"kick":     admin.KickUserSlashCommand,
 }
 
 var GamesCommands = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){}

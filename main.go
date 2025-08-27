@@ -2,13 +2,9 @@ package main
 
 import (
 	"Turgho/Yuuko-BOT/commands"
-	"Turgho/Yuuko-BOT/db"
+	"Turgho/Yuuko-BOT/config"
 	"Turgho/Yuuko-BOT/events"
-	"Turgho/Yuuko-BOT/models/monsterhunter/armor"
-	"Turgho/Yuuko-BOT/models/monsterhunter/weapon"
 	"Turgho/Yuuko-BOT/register"
-	"Turgho/Yuuko-BOT/server"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -38,23 +34,8 @@ func initLog() {
 }
 
 func main() {
-	server.ServeStaticIcons()
-
-	fmt.Println("Servidor de ícones rodando em http://localhost:8000/icons/")
-
 	// Inicia o arquivo de logs
 	initLog()
-
-	// Inicia a Database
-	db.InitDB()
-
-	if err := weapon.LoadWeapons(); err != nil {
-		log.Fatalf("Falha crítica ao carregar armas: %v", err)
-	}
-
-	if err := armor.LoadArmors(); err != nil {
-		log.Fatalf("Falha crítica ao carregar armaduras: %v", err)
-	}
 
 	// Carregar variáveis de ambiente
 	err := godotenv.Load()
@@ -68,9 +49,9 @@ func main() {
 		log.Fatal("DISCORD_TOKEN não encontrado no .env")
 	}
 
-	guildID := os.Getenv("GUILD_ID")
-	if guildID == "" {
-		log.Fatal("GUILD_ID não encontrado no .env")
+	// Carregar config.json
+	if err := config.LoadConfig("config/config.json"); err != nil {
+		log.Fatal("Erro ao carregar config.json: ", err)
 	}
 
 	// Inicia uma nova sessão
@@ -101,7 +82,7 @@ func main() {
 
 	// Registrar os comandos
 	appID := dg.State.User.ID
-	register.RegisterAllCommands(dg, appID, guildID)
+	register.RegisterAllCommands(dg, appID, config.Cfg.Guilds)
 
 	log.Printf("Logado como: %s#%s!\n", dg.State.User.Username, dg.State.User.Discriminator)
 

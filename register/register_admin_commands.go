@@ -24,6 +24,18 @@ func RegisterAdminCommands(s *discordgo.Session, appID, guildID string) {
 			Name:        "shutdown",
 			Description: "Desliga o bot",
 		},
+		{
+			Name:        "kick",
+			Description: "Expulsa um membro do servidor",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user",
+					Description: "Usuário para kickar",
+					Required:    true,
+				},
+			},
+		},
 	}
 
 	for _, cmd := range adminCommands {
