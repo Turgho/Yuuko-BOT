@@ -79,6 +79,8 @@ PORT=PORTA_DO_BOT
 
 `Obs.: é possível adicionar múltiplas guilds no array "Guilds".`
 
+---
+
 ## 💡 Objetivo
 
 O Yuuko-BOT foi criado para servidores que desejam uma solução **leve**, **rápida** e **eficiente**, capaz de automatizar tarefas administrativas, engajar membros e manter a ordem sem complicações.  
