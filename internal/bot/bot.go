@@ -4,7 +4,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
+	"time"
 
 	"Turgho/Yuuko-BOT/config"
 	"Turgho/Yuuko-BOT/internal/commands"
@@ -47,21 +49,59 @@ func StartBot() {
 
 // ---------------------------- Funções auxiliares ----------------------------
 
+const logDir = "logs"
+const maxDays = 7
+
 // initLog cria a pasta logs (se necessário) e redireciona logs para arquivo
 func initLog() {
-	if _, err := os.Stat("logs"); os.IsNotExist(err) {
-		if err := os.Mkdir("logs", 0755); err != nil {
+	// Cria pasta logs se não existir
+	if _, err := os.Stat(logDir); os.IsNotExist(err) {
+		if err := os.Mkdir(logDir, 0755); err != nil {
 			log.Fatal("Erro ao criar pasta logs:", err)
 		}
 	}
 
-	file, err := os.OpenFile("logs/yuuko_bot.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	// Nome do arquivo baseado na data
+	today := time.Now().Format("2006-01-02")
+	logFile := filepath.Join(logDir, today+".log")
+
+	file, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatal("Erro ao abrir arquivo de log:", err)
 	}
 
+	// Redireciona logs
 	log.SetOutput(file)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	// Remove logs antigos
+	removeOldLogs()
+}
+
+// removeOldLogs deleta arquivos de log com mais de maxDays
+func removeOldLogs() {
+	files, err := os.ReadDir(logDir)
+	if err != nil {
+		log.Printf("Erro ao ler pasta de logs: %v", err)
+		return
+	}
+
+	cutoff := time.Now().AddDate(0, 0, -maxDays)
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+
+		filePath := filepath.Join(logDir, f.Name())
+		info, err := f.Info()
+		if err != nil {
+			continue
+		}
+
+		if info.ModTime().Before(cutoff) {
+			os.Remove(filePath)
+		}
+	}
 }
 
 // loadEnv carrega as variáveis do arquivo .env
@@ -77,8 +117,18 @@ func loadEnv() {
 
 // loadConfig carrega o arquivo config.json
 func loadConfig() {
-	if err := config.LoadConfig("config/config.json"); err != nil {
+	// Carrega config.json e popula o map global CfgMap
+	configMap, err := config.LoadConfig("config/config.json")
+	if err != nil {
 		log.Fatal("Erro ao carregar config.json:", err)
+	}
+
+	// Salva no global
+	config.CfgMap = configMap
+
+	// Se quiser, pode logar as guilds carregadas
+	for id := range configMap {
+		log.Printf("✅ Guild carregada: %s", id)
 	}
 }
 
@@ -120,7 +170,8 @@ func openSession(dg *discordgo.Session) {
 // registerCommands registra todos os comandos nas guilds configuradas
 func registerCommands(dg *discordgo.Session) {
 	appID := dg.State.User.ID
-	register.RegisterAllCommands(dg, appID, config.Cfg.Guilds)
+	register.RemoveObsoleteCommandsAllGuilds(dg)
+	register.RegisterAllCommands(dg, appID, config.CfgMap)
 }
 
 // waitForShutdown mantém o bot ativo até receber CTRL+C ou sinal de desligamento
