@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"Turgho/Yuuko-BOT/utils"
+	"Turgho/Yuuko-BOT/internal/services/utils"
 	"log"
 	"time"
 

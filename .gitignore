@@ -3,11 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-node_modules
+node_modules/
 .env
-logs
+logs/
 *.db
 *.sqlite
+config.json
 
 # User-specific files
 *.rsuser

@@ -1,11 +1,10 @@
 package events
 
 import (
+	"Turgho/Yuuko-BOT/internal/services/utils"
 	"log"
 	"os"
 	"time"
-
-	"Turgho/Yuuko-BOT/utils"
 
 	"github.com/bwmarrin/discordgo"
 )
