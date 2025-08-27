@@ -25,3 +25,27 @@ func LogCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		commandName,
 	)
 }
+
+// LogReaction registra informações de uma reação adicionada
+func LogReaction(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+
+	// Pega informações do usuário
+	user, err := s.User(r.UserID)
+	if err != nil {
+		log.Printf("[REACTION] %s | GuildID: %s | ChannelID: %s | UserID: %s | MsgID: %s | Emoji: %s (erro ao obter usuário)\n",
+			timestamp, r.GuildID, r.ChannelID, r.UserID, r.MessageID, r.Emoji.Name)
+		return
+	}
+
+	log.Printf("[REACTION] %s | GuildID: %s | ChannelID: %s | User: %s#%s (%s) | MsgID: %s | Emoji: %s\n",
+		timestamp,
+		r.GuildID,
+		r.ChannelID,
+		user.Username,
+		user.Discriminator,
+		user.ID,
+		r.MessageID,
+		r.Emoji.Name,
+	)
+}

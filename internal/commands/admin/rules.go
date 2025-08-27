@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"Turgho/Yuuko-BOT/config"
+	"Turgho/Yuuko-BOT/internal/services/logger"
 	"Turgho/Yuuko-BOT/internal/services/utils"
 	"log"
 	"time"
@@ -56,17 +58,16 @@ Mantenha o respeito nas chamadas.
 - ` + "`Regra 10`" + ` 👮 **Equipe de Moderação**  
 Siga as instruções dos moderadores.`
 
-	// Obtém informações do servidor
+	// Pega informações do servidor
 	guild, iconURL, err := utils.GetGuildInfo(s, i.GuildID)
 	if err != nil {
 		utils.SendErrorResponse(s, i, "❌ Não foi possível obter as informações do servidor.")
-		log.Println("Erro ao obter informações do servidor ", i.GuildID)
+		log.Println("Erro ao obter informações do servidor:", i.GuildID)
 		return
 	}
 
-	// Cria o embed das regras
 	embed := &discordgo.MessageEmbed{
-		Title:       "📜 **REGRAS DO SERVIDOR**",
+		Title:       "📜 REGRAS DO SERVIDOR",
 		Description: rules,
 		Color:       0xff4600,
 		Author: &discordgo.MessageEmbedAuthor{
@@ -95,12 +96,30 @@ Siga as instruções dos moderadores.`
 		return
 	}
 
-	// Busca a última mensagem enviada do bot (embed das regras)
-	// para adicionar a reação
-	msgs, _ := s.ChannelMessages(i.ChannelID, 1, "", "", "")
-	if len(msgs) > 0 {
-		RulesMessageID = msgs[0].ID
-		s.MessageReactionAdd(i.ChannelID, RulesMessageID, "✅")
-		s.ChannelMessageSend(i.ChannelID, "📢 **APÓS LER AS REGRAS, REAJA COM `✅` PARA LIBERAR OS CANAIS.**")
+	// Busca a última mensagem enviada pelo bot no canal
+	msgs, err := s.ChannelMessages(i.ChannelID, 1, "", "", "")
+	if err != nil || len(msgs) == 0 {
+		log.Println("Erro ao obter mensagem enviada do bot:", err)
+		return
 	}
+
+	msg := msgs[0]
+
+	// Adiciona reação
+	s.MessageReactionAdd(i.ChannelID, msg.ID, "✅")
+
+	// Atualiza RulesMessageID na config
+	guildCfg := config.CfgMap[i.GuildID]
+	guildCfg.RulesMessageID = msg.ID
+	config.CfgMap[i.GuildID] = guildCfg
+	err = config.SaveConfig("config/config.json")
+	if err != nil {
+		log.Println("Erro ao salvar config.json:", err)
+	}
+
+	// Mensagem de orientação
+	s.ChannelMessageSend(i.ChannelID, "📢 **Após ler as regras, reaja com `✅` para liberar os canais.**")
+
+	// Log automático
+	logger.LogCommand(s, i)
 }
