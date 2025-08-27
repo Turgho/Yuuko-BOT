@@ -28,5 +28,6 @@ func ShutdownSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	s.Close()
 
 	// Finaliza o processo
+
 	os.Exit(0)
 }

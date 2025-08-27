@@ -16,6 +16,10 @@ func RegisterPublicCommands(s *discordgo.Session, appID, guildID string) {
 			Name:        "ping",
 			Description: "Comando para testar a latência de resposta do bot",
 		},
+		{
+			Name:        "coinflip",
+			Description: "Gira uma moeda com cara ou coroa",
+		},
 	}
 
 	for _, cmd := range publicCommands {

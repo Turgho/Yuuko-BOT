@@ -1,8 +1,9 @@
 package router
 
 import (
-	"Turgho/Yuuko-BOT/commands/admin"
-	"Turgho/Yuuko-BOT/commands/public"
+	"Turgho/Yuuko-BOT/internal/commands/admin"
+	"Turgho/Yuuko-BOT/internal/commands/games"
+	"Turgho/Yuuko-BOT/internal/commands/public"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -19,6 +20,9 @@ var AdminCommands = map[string]func(s *discordgo.Session, i *discordgo.Interacti
 	"purge":    admin.PurgeSlashCommand,
 	"restart":  admin.RestartSlashCommand,
 	"shutdown": admin.ShutdownSlashCommand,
+	"kick":     admin.KickUserSlashCommand,
 }
 
-var GamesCommands = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){}
+var GamesCommands = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+	"coinflip": games.CoinflipSlashCommand,
+}
